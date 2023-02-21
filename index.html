@@ -1,0 +1,326 @@
+<html>
+
+<head>
+    <title> Tuition </title>
+    <!-- Title -->
+    <!--stylesheet and vue.js links -->
+    <link rel="stylesheet" type="text/css" href="Style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.10/dist/vue.js"></script>
+    <script src="product.js"></script>
+
+</head>
+
+<body>
+    <div id="app">
+        <!-- The element where Vue will mount our application -->
+        <header>
+            <h1 v-text="sitename"> </h1>
+
+            <!-- Adding Checkout button -->
+            <div class="checkoutbutton">
+                <button v-on:click="showCheckout">  
+                {{cartItemCount}}     <!-- 'cartItemCount' is used the same way as a data property. -->
+               CheckOut <span class="fas fa-shopping-cart"> </span>  <!--Checkout button icon-->
+            </button> </div>
+
+
+        </header>
+        <main>
+
+            <!--the code to sort the products by subject, location, prices and spaces-->
+            <div v-if="showProducts">
+                <div class="sort">
+                    <strong> Sort By </strong>
+                    <input type="radio" value="Subject" v-model="classA" />
+                    <label for="subject">Subject</label>
+                    <input type="radio" value="Location" v-model="classA" />
+                    <label for="location">Location</label>
+                    <input type="radio" value="Price" v-model="classA" />
+                    <label for="price">Price</label>
+                    <input type="radio" value="Space" v-model="classA" />
+                    <label for="space">Space</label>
+                </div>
+
+                <!--Adding Searchbar for courses-->
+                <div class="search">
+                    Search : <input type="search" placeholder="SearchCourse" v-model="SearchCourse" v-on:keyup="showSearch">
+                </div>
+
+                <!--the code for displaying the products in ascending and descending order as per prices-->
+                <div class="order">
+
+                    <strong> Order </strong>
+                    <input type="radio" value="a" v-model="classB" />
+                    <label for="a">Ascending</label>
+                    <input type="radio" value="d" v-model="classB" />
+                    <label for="d">Descending</label>
+
+                </div>
+
+                <!--the code for searching the courses-->
+                <div v-if="checkBar">
+                    <!--To display the ProductList-->
+                    <div v-for="(products, index) in ProductList" :key="index">
+
+                        <fieldset>
+                            <!-- products information -->
+                            <!-- bind the 'src' attribute to the 'product.image' in 'data' -->
+                            <img v-bind:src="products.img" alt="" height="200px" width="200px">
+                            <h2 v-text="products.subject"></h2>
+
+                            <!-- The double curly brackets is the shorter version of 'v-text' -->
+                            <p>Price: {{ products.price }}</p>
+                            <p>Location: {{ products.location }}</p>
+                            <p>Spaces: {{ products.dSpace }}</p>
+                            <!-- Add to Cart Button -->
+                            <button v-on:click="addToCart(products)" v-bind:disabled="!canAddToCart(products)"> <!-- This button will be displayed when 'canAddToCart' is True -->
+                              Add to Cart   <i class="fas fa-shopping-cart"></i>  <!--add to cart icon -->
+                            </button>
+                        </fieldset>
+                    </div>
+                </div>
+
+                <!-- the code for the product page -->
+                <!--To display the ProductList-->
+                <div v-for="products in sortedProducts">
+
+                    <fieldset>
+                        <!-- products information -->
+                        <img v-bind:src="products.img" alt="" height="200px" width="200px">
+                        <h2 v-text="products.subject"></h2>
+                        <p>Price: {{ products.price }}</p>
+                        <p>Location: {{ products.location }}</p>
+                        <p>Spaces: {{ products.dSpace }}</p>
+                        <!--variable dspaces is used to decrease the spaces each time when a product is added-->
+                        <!-- Add to Cart Button -->
+                        <button v-on:click="addToCart(products)" v-bind:disabled="!canAddToCart(products)">
+                          Add to Cart   <i class="fas fa-shopping-cart"></i>  <!--add to cart icon -->
+                        </button>
+                    </fieldset>
+
+                </div>
+            </div>
+
+            <!-- the code for the checkout page -->
+            <div v-else class="checkout">
+
+                <h3>My CheckOut Page</h3>
+                <p>
+                    <strong> Name : </strong>
+                    <!-- This input field is bound to 'Name' in the 'order' object -->
+                    <input v-model.trim="order.Name" />
+                </p>
+                <p>
+                    <strong> Phone No : </strong>
+                    <!-- This input field is bound to 'Phone number' in the 'order' object -->
+                    <input v-model.trim="order.PhoneNo" />
+                </p>
+                <!--Button for placing orders -->
+                <button v-on:click="submitForm">PLACE ORDER</button>
+
+
+                <!--To display products on the checkout page with the product info -->
+                <div v-for="products in showCart">
+
+                    <fieldset>
+                        <!-- products information -->
+                        <h2 v-text="products"></h2>
+
+                        <button v-on:click="removeClass(products)">   <!--To remove products from the checkout page-->
+                                Remove
+                            </button>
+
+                    </fieldset>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="text/javascript">
+        var webstore = new Vue({ // The Vue constructor
+            el: '#app', // The 'option object': DOM mounting point
+            data: { // storing the data
+                sitename: 'Courses', //naming the sitename
+
+                // The first 'products' is a Vue property // The second products is the array from the 'products.js'
+                products: products,
+
+                // products: {   
+                //     id: 1001,
+                //     subject: "Math",
+                //     location: "London",
+                //     price: 100,
+                //     spaces: 10,
+                // },
+
+                cart: [], // array to store items in shopping cart
+                SearchCourse: '',
+                searchInput: "",
+                checkBar: false,
+
+                showProducts: true, //To display the product page
+                order: {
+                    Name: '',
+                    PhoneNo: ''
+
+                },
+                classA: "Subject",
+                classB: "a",
+
+
+            },
+
+            // the 'methods' of Vue instance
+            methods: { // this is the 'methods' option. It value has a function.
+
+                addToCart(products) { //Adding products to the checkout page with decreasing spaces
+
+                    if (products.spaces > 0) {
+                        products.dSpace -= 1; // confirm there are enough space left in class
+                    }
+                    this.cart.push(products.id);
+                    console.log(this.cart);
+                },
+
+                showCheckout() { //confirming checkout products
+                    this.showProducts = this.showProducts ? false : true; //turnary operator  - if else statement
+                },
+
+                showSearch() { // confirming search bar products
+                    this.checkBar = true;
+                },
+
+                submitForm() { // Confirming the order  and to display an alert message
+                    alert('Order submitted!')
+                },
+
+                cartCount(id) { // Numbers of product added to the cart is counted by product id
+                    let count = 0;
+                    for (let i = 0; i < this.cart.length; i++) {
+                        if (this.cart[i] === id) {
+                            count++;
+                        }
+                    }
+                    return count;
+                },
+
+                canAddToCart(products) { //To disabled add to cart when there is no spaces left 
+                    return products.spaces > this.cartCount(products.id);
+                },
+
+                removeClass(products) { //To remove products from the cart 
+                    for (let j = 0; j < this.products.length; j++) {
+                        if (products === this.products[j].subject) {
+                            const index = this.cart.indexOf(this.products[j].id);
+                            if (index > -1) {
+
+                                // splice removes the element of the specified index 
+                                this.cart.splice(index, 1);
+                            }
+                            this.products[j].dSpace += 1;
+                        }
+                    }
+                }
+            },
+
+            computed: {
+
+                sortedProducts() { // the propety name // its value is calculated when it is called
+
+                    //The sorting is done here as per the ProductList courses
+
+                    //Asending and Descending order for all the courses
+                    if (this.classB == "a") {
+                        a = 1;
+                        b = -1;
+                    } else if (this.classB == "d") {
+                        a = -1;
+                        b = 1;
+                    }
+
+                    //Sorting based on the each Subject
+                    if (this.classA == "Subject") {
+                        function compare(x, y) {
+                            if (x.subject > y.subject)
+                                return a;
+                            if (x.subject < y.subject)
+                                return b;
+                            return 0;
+                        }
+
+                        //Sorting based on the each Location 
+                    } else if (this.classA == "Location") {
+                        function compare(x, y) {
+                            if (x.location > y.location)
+                                return a;
+                            if (x.location < y.location)
+                                return b;
+                            return 0;
+                        }
+
+                        //Sorting based on the each Price which low to high or high to low
+                    } else if (this.classA == "Price") {
+                        function compare(x, y) {
+                            if (x.price > y.price)
+                                return a;
+                            if (x.price < y.price)
+                                return b;
+                            return 0;
+                        }
+
+                        //Sorting based on the Space decreased for each product
+                    } else if (this.classA == "Space") {
+                        // x and y is instances of the products
+                        function compare(x, y) {
+                            if (x.dSpace > y.dSpace)
+                                return a;
+                            if (x.dSpace < y.dSpace)
+                                return b;
+                            return 0;
+                        }
+                    }
+                    return this.products.sort(compare); //returning the sort values as true
+
+                },
+
+                cartItemCount: function() { //Returning the value of data properties
+                    return this.cart.length || "";
+                },
+
+                // Cart function
+                showCart() {
+
+                    let order = [];
+
+                    for (let i = 0; i < this.cart.length; i++) {
+                        for (let j = 0; j < this.products.length; j++) {
+                            if (this.cart[i] === this.products[j].id) {
+                                order.push(this.products[j].subject);
+                            }
+                        }
+                    }
+
+                    return order;
+                },
+
+                // Search fuction
+                ProductList() {
+
+                    this.checkBar = true
+                    if (this.SearchCourse.trim().length > 0) { //trim removes the white spaces 
+                        return this.products.filter((products) => products.subject.toLowerCase().includes(this.SearchCourse.trim().toLowerCase()) || products.location.toLowerCase().includes(this.SearchCourse.trim().toLowerCase()))
+                    } else {
+
+                        this.checkBar = false
+                        this.showProducts = true
+                    }
+                    return this.products
+                }
+            },
+
+        });
+    </script>
+</body>
+
+</html>
