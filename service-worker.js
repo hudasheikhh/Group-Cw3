@@ -24,10 +24,10 @@ self.addEventListener("fetch", function(e) { //FetchEvent.respondWith method int
             // Download the file if it is not in the cache,
             return (
                 r ||
-                fetch(e.request).then(function(response) {
+                fetch(e.request).then(function(response) { // fetch(e.request) if the file is not in the cache, we use another fetch request to download it.               
                     // add the new file to cache
-                    return caches.open(cacheName).then(function(cache) {
-                        cache.put(e.request, response.clone()); //response.clone its for  third party file being cloned one by one as per the request and added to cache.
+                    return caches.open(cacheName).then(function(cache) { //   caches.open(cacheName).then stores the response in the cache so it will be available there next time it is requested.
+                        cache.put(e.request, response.clone()); //response.clone its for third party file being cloned one by one as per the request and added to cache.
                         return response;
                     });
                 })
