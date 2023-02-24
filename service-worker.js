@@ -7,7 +7,7 @@ var cacheFiles = [
     "images",
 ];
 
-self.addEventListener("install", (e) => {
+self.addEventListener("install", (e) => { //self here refers to the window object in JavaScript(thebrowserwindow).
     console.log("[Service Worker] Install");
     e.waitUntil(
         caches.open(cacheName).then((cache) => {
@@ -18,7 +18,7 @@ self.addEventListener("install", (e) => {
 });
 
 // cache the third-party files
-self.addEventListener("fetch", function(e) {
+self.addEventListener("fetch", function(e) { //FetchEvent.respondWith method intercepts all fetch request
     e.respondWith(
         caches.match(e.request).then(function(r) {
             // Download the file if it is not in the cache,
@@ -27,7 +27,7 @@ self.addEventListener("fetch", function(e) {
                 fetch(e.request).then(function(response) {
                     // add the new file to cache
                     return caches.open(cacheName).then(function(cache) {
-                        cache.put(e.request, response.clone());
+                        cache.put(e.request, response.clone()); //response.clone its for  third party file being cloned one by one as per the request and added to cache.
                         return response;
                     });
                 })
